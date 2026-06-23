@@ -1,0 +1,331 @@
+// Prisma schema — single source of truth for the VibeSphere data model.
+// Translated from the legacy Mongoose models in api/models/.
+// Key migrations from the legacy shape:
+//   - friendList array        -> Friendship self-relation with status (PENDING/ACCEPTED)
+//   - likes/participants arrays -> many-to-many join tables
+//   - comments/tickets         -> one-to-many relations
+//   - interests/eventType strings -> Prisma enums (values with spaces use @map)
+//   - Event start/end strings  -> DateTime
+//   - soft delete preserved    -> deletedAt
+//
+// The User model merges Auth.js's adapter-required columns (name, email,
+// emailVerified, image) with the domain profile fields. `name` is the display
+// / full name; `image` is the profile picture. `username` is nullable + unique
+// so OAuth sign-up (which has no username yet) doesn't break adapter user
+// creation — onboarding prompts for it afterwards.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Auth.js (NextAuth v5) — Prisma adapter tables + domain User
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id            String     @id @default(cuid())
+  // Auth.js adapter fields
+  name          String?
+  email         String     @unique
+  emailVerified DateTime?
+  image         String?
+  // Domain profile fields
+  username      String?    @unique
+  password      String? // bcrypt hash for Credentials sign-in; null for OAuth-only accounts
+  bio           String     @default("")
+  location      String     @default("")
+  interests     Interest[] @default([])
+
+  // Auth.js relations
+  accounts Account[]
+  sessions Session[]
+
+  // Domain relations
+  posts          Post[]    @relation("PostCreatedBy")
+  likedPosts     Post[]    @relation("PostLikes")
+  comments       Comment[] @relation("CommentCommentedBy")
+  likedComments  Comment[] @relation("CommentLikes")
+  createdEvents  Event[]   @relation("EventCreatedBy")
+  joinedEvents   Event[]   @relation("EventParticipants")
+  ticketsOffered Ticket[]  @relation("TicketOfferedBy")
+  bookings       Booking[]
+
+  // Friendship self-relation
+  sentFriendRequests     Friendship[] @relation("FriendshipRequester")
+  receivedFriendRequests Friendship[] @relation("FriendshipAddressee")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Friendship — replaces the legacy friendList array
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Friendship {
+  id          String           @id @default(cuid())
+  requesterId String
+  addresseeId String
+  status      FriendshipStatus @default(PENDING)
+
+  requester User @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee User @relation("FriendshipAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Posts & Comments
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Post {
+  id          String   @id @default(cuid())
+  content     String   @default("")
+  images      String[] @default([])
+  createdById String
+
+  createdBy User      @relation("PostCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  likes     User[]    @relation("PostLikes")
+  comments  Comment[]
+
+  deletedAt DateTime? // soft delete
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([createdById])
+  @@index([createdAt])
+}
+
+model Comment {
+  id            String @id @default(cuid())
+  content       String
+  postId        String
+  commentedById String
+
+  post        Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentedBy User   @relation("CommentCommentedBy", fields: [commentedById], references: [id], onDelete: Cascade)
+  likes       User[] @relation("CommentLikes")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([postId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Events, Tickets & Bookings
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Event {
+  id          String      @id @default(cuid())
+  title       String
+  description String
+  eventType   EventType[]
+  startDate   DateTime
+  endDate     DateTime
+  location    String
+  createdById String
+  isPaid      Boolean     @default(false)
+
+  createdBy    User      @relation("EventCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  participants User[]    @relation("EventParticipants")
+  tickets      Ticket[]
+  bookings     Booking[]
+
+  deletedAt DateTime? // soft delete
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([createdById])
+  @@index([startDate])
+}
+
+model Ticket {
+  id          String @id @default(cuid())
+  eventId     String
+  offeredById String
+  price       Int // stored in cents (Stripe-friendly)
+  quantity    Int    @default(0)
+  type        String @default("General")
+
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  offeredBy User      @relation("TicketOfferedBy", fields: [offeredById], references: [id], onDelete: Cascade)
+  bookings  Booking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId])
+}
+
+model Booking {
+  id              String  @id @default(cuid())
+  userId          String
+  eventId         String
+  ticketId        String?
+  quantity        Int     @default(1)
+  stripeSessionId String? @unique
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event  Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  ticket Ticket? @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([eventId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+}
+
+enum Interest {
+  Sport
+  Fitness
+  WorkOut       @map("Work out")
+  Football
+  Basketball
+  Volleyball
+  Kayaking
+  ScubaDiving   @map("Scuba diving")
+  Swimming
+  Tennis
+  Yoga
+  Hiking
+  Cycling
+  Art
+  Painting
+  Drawing
+  Crafting
+  Photography
+  Writing
+  Music
+  Gaming
+  VideoGames    @map("Video games")
+  BoardGames    @map("Board games")
+  CardGames     @map("Card games")
+  Puzzles
+  Reading
+  Books
+  Articles
+  Blogs
+  Magazines
+  Languages
+  Science
+  Technology
+  IT
+  Gadgets
+  Programming
+  Robotics
+  Astronomy
+  Traveling
+  Cultures
+  Cooking
+  Volunteering
+  Charity
+  Movies
+  TVShows       @map("TV Shows")
+  WatchingFilms @map("Watching films")
+  Series
+  Dancing
+  Concerts
+  Theater
+  Literature
+  Blogging
+  Journalism
+  Gardening
+  Landscaping
+  Animals
+  Birds
+  Climbing
+  Paragliding
+  Meditation
+  Renovating
+  Decorating
+  Furniture
+  Design
+  Sewing
+  Knitting
+  Woodworking
+}
+
+enum EventType {
+  Sport
+  Yoga
+  OutdoorActivities @map("Outdoor activities")
+  Art
+  Photography
+  Writing
+  Music
+  Gaming
+  Languages
+  Science
+  Reading
+  Technology
+  IT
+  Programming
+  Traveling
+  Cooking
+  Volunteering
+  Films
+  Series
+  Dancing
+  Concerts
+  Theater
+  Literature
+  Landscaping
+  Design
+  Animals
+}
