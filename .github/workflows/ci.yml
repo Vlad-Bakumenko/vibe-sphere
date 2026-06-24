@@ -11,6 +11,11 @@ jobs:
     name: Lint, Typecheck & Test
     runs-on: ubuntu-latest
 
+    env:
+      # Auth.js needs a secret available when `next build` evaluates routes
+      # that call auth(). No database is required (JWT sessions).
+      AUTH_SECRET: ci-only-secret-not-used-in-production
+
     steps:
       - uses: actions/checkout@v4
 
@@ -45,6 +50,25 @@ jobs:
     runs-on: ubuntu-latest
     needs: quality
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: vibesphere
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vibesphere?schema=public
+      AUTH_SECRET: ci-only-secret-not-used-in-production
+
     steps:
       - uses: actions/checkout@v4
 
@@ -58,6 +82,11 @@ jobs:
 
       - name: Generate Prisma Client
         run: pnpm prisma generate
+
+      - name: Apply migrations and seed
+        run: |
+          pnpm prisma migrate deploy
+          pnpm prisma db seed
 
       - name: Install Playwright browsers
         run: pnpm dlx playwright install --with-deps chromium
