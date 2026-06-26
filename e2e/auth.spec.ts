@@ -18,7 +18,8 @@ test('signs in with seeded credentials and lands on the feed', async ({ page }) 
 
   await page.waitForURL('**/feed')
   await expect(page.getByRole('heading', { name: 'Feed' })).toBeVisible()
-  await expect(page.getByText(SEEDED_EMAIL)).toBeVisible()
+  // Authenticated app shell is present.
+  await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible()
 })
 
 test('shows an error for invalid credentials', async ({ page }) => {

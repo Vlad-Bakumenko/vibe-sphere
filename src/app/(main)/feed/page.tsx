@@ -1,16 +1,20 @@
-import { auth } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 
-// Minimal protected landing. The real feed is built in Phase 3B.
+import { auth } from '@/lib/auth'
+import { getPosts } from '@/features/post/actions'
+import { PostFeed } from '@/features/post/components/post-feed'
+
 export default async function FeedPage() {
   const session = await auth()
+  if (!session?.user?.id) redirect('/login')
+
+  // Pre-fetch the first page on the server; PostFeed hydrates from it.
+  const initialData = await getPosts()
 
   return (
     <div className="grid gap-4">
       <h1 className="text-2xl font-semibold">Feed</h1>
-      <p className="text-muted-foreground">
-        Signed in as <span className="text-foreground font-medium">{session?.user?.name}</span> (
-        {session?.user?.email})
-      </p>
+      <PostFeed initialData={initialData} currentUserId={session.user.id} />
     </div>
   )
 }
