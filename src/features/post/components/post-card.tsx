@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { CommentSection } from '@/features/comment/components/comment-section'
 import { deletePost, editPost, likePost, type FeedPost } from '../actions'
 
 function formatDate(iso: string) {
@@ -40,6 +41,7 @@ export function PostCard({
   const [likeCount, setLikeCount] = useState(post.likeCount)
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState(post.content)
+  const [showComments, setShowComments] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   function toggleLike() {
@@ -162,11 +164,19 @@ export function PostCard({
           <Heart className={cn('size-4', liked && 'fill-current')} />
           {likeCount}
         </button>
-        <span className="flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => setShowComments((v) => !v)}
+          aria-expanded={showComments}
+          aria-label="Toggle comments"
+          className="hover:text-foreground flex items-center gap-1.5 transition-colors"
+        >
           <MessageCircle className="size-4" />
           {post.commentCount}
-        </span>
+        </button>
       </div>
+
+      {showComments && <CommentSection postId={post.id} />}
     </article>
   )
 }
