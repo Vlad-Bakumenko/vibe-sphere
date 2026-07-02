@@ -4,7 +4,10 @@ import { notFound } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { getProfile } from '@/features/profile/actions'
 import { ProfileHeader } from '@/features/profile/components/profile-header'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { getFriendshipState } from '@/features/friendship/actions'
+import { FriendButton } from '@/features/friendship/components/friend-button'
+import { FriendsList } from '@/features/friendship/components/friends-list'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
@@ -19,9 +22,21 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
   const isOwnProfile = session?.user?.id === profile.id
 
+  let headerAction: React.ReactNode = null
+  if (isOwnProfile) {
+    headerAction = (
+      <Button asChild variant="outline" size="sm">
+        <Link href="/settings">Edit profile</Link>
+      </Button>
+    )
+  } else if (session?.user?.id) {
+    const state = await getFriendshipState(profile.id)
+    headerAction = <FriendButton targetUserId={profile.id} initialState={state} />
+  }
+
   return (
     <div className="grid gap-6">
-      <ProfileHeader profile={profile} isOwnProfile={isOwnProfile} />
+      <ProfileHeader profile={profile} action={headerAction} />
 
       <Tabs defaultValue="posts">
         <TabsList>
@@ -64,27 +79,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           )}
         </TabsContent>
 
-        <TabsContent value="friends" className="grid gap-2">
-          {profile.friends.length === 0 ? (
-            <EmptyState>No friends yet.</EmptyState>
-          ) : (
-            profile.friends.map((friend) => (
-              <Link
-                key={friend.id}
-                href={`/profile/${friend.username}`}
-                className="hover:bg-accent flex items-center gap-3 rounded-md p-2"
-              >
-                <Avatar className="size-9">
-                  {friend.image && <AvatarImage src={friend.image} alt={friend.name ?? ''} />}
-                  <AvatarFallback>{(friend.name ?? friend.username ?? '?')[0]}</AvatarFallback>
-                </Avatar>
-                <div className="text-sm">
-                  <p className="font-medium">{friend.name}</p>
-                  <p className="text-muted-foreground">@{friend.username}</p>
-                </div>
-              </Link>
-            ))
-          )}
+        <TabsContent value="friends">
+          <FriendsList friends={profile.friends} />
         </TabsContent>
       </Tabs>
     </div>
