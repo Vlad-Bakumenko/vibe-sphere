@@ -1,9 +1,7 @@
-import Link from 'next/link'
 import { MapPin, CalendarDays } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import type { ProfileData } from '../actions'
 
 function initials(name: string | null, username: string | null) {
@@ -18,10 +16,10 @@ function initials(name: string | null, username: string | null) {
 
 export function ProfileHeader({
   profile,
-  isOwnProfile,
+  action,
 }: {
   profile: ProfileData
-  isOwnProfile: boolean
+  action?: React.ReactNode
 }) {
   const joined = new Date(profile.createdAt).toLocaleDateString(undefined, {
     month: 'long',
@@ -66,11 +64,7 @@ export function ProfileHeader({
         </div>
       </div>
 
-      {isOwnProfile && (
-        <Button asChild variant="outline" size="sm">
-          <Link href="/settings">Edit profile</Link>
-        </Button>
-      )}
+      {action}
     </header>
   )
 }
