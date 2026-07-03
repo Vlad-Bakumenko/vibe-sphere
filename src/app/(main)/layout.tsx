@@ -25,6 +25,9 @@ export default async function MainLayout({ children }: { children: React.ReactNo
             <Link href="/feed" className="text-muted-foreground hover:text-foreground text-sm">
               Feed
             </Link>
+            <Link href="/events" className="text-muted-foreground hover:text-foreground text-sm">
+              Events
+            </Link>
             {user?.username && (
               <Link
                 href={`/profile/${user.username}`}
