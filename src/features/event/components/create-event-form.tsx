@@ -1,7 +1,7 @@
 'use client'
 
 import { useTransition } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -40,6 +40,8 @@ export function CreateEventForm({ event }: { event?: EventDetailData }) {
           endDate: toLocalInput(event.endDate),
           location: event.location,
           isPaid: event.isPaid,
+          priceUsd: event.ticket ? String(event.ticket.price / 100) : '',
+          quantity: event.ticket ? String(event.ticket.quantity) : '',
         }
       : {
           title: '',
@@ -49,8 +51,12 @@ export function CreateEventForm({ event }: { event?: EventDetailData }) {
           endDate: '',
           location: '',
           isPaid: false,
+          priceUsd: '',
+          quantity: '',
         },
   })
+
+  const isPaid = useWatch({ control, name: 'isPaid' })
 
   function onSubmit(values: CreateEventInput) {
     startTransition(async () => {
@@ -120,6 +126,25 @@ export function CreateEventForm({ event }: { event?: EventDetailData }) {
         <input type="checkbox" className="size-4" {...register('isPaid')} />
         This is a paid event
       </label>
+
+      {isPaid && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-2">
+            <Label htmlFor="priceUsd">Ticket price (USD)</Label>
+            <Input id="priceUsd" type="number" min="0" step="0.01" {...register('priceUsd')} />
+            {errors.priceUsd && (
+              <p className="text-destructive text-sm">{errors.priceUsd.message}</p>
+            )}
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="quantity">Tickets available</Label>
+            <Input id="quantity" type="number" min="0" step="1" {...register('quantity')} />
+            {errors.quantity && (
+              <p className="text-destructive text-sm">{errors.quantity.message}</p>
+            )}
+          </div>
+        </div>
+      )}
 
       <Button type="submit" disabled={isPending} className="w-fit">
         {isPending ? 'Saving…' : event ? 'Save changes' : 'Create event'}

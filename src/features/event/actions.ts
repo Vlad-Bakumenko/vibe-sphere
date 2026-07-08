@@ -36,6 +36,8 @@ export type EventListItem = {
 export type EventDetailData = EventListItem & {
   description: string
   participants: UserSummary[]
+  ticket: { id: string; price: number; quantity: number } | null
+  hasBooked: boolean
 }
 
 export type EventFilters = {
@@ -135,14 +137,24 @@ export async function getEvent(id: string): Promise<EventDetailData | null> {
       ...listSelect,
       description: true,
       participants: { select: { id: true, name: true, username: true, image: true } },
+      tickets: {
+        take: 1,
+        orderBy: { createdAt: 'asc' },
+        select: { id: true, price: true, quantity: true },
+      },
+      bookings: { where: { userId }, select: { id: true } },
     },
   })
   if (!row) return null
+
+  const ticket = row.tickets[0] ?? null
 
   return {
     ...toListItem({ ...row, joined: row.participants.some((p) => p.id === userId) }, userId),
     description: row.description,
     participants: row.participants,
+    ticket: ticket ? { id: ticket.id, price: ticket.price, quantity: ticket.quantity } : null,
+    hasBooked: row.bookings.length > 0,
   }
 }
 
@@ -167,6 +179,16 @@ export async function createEvent(
       endDate: new Date(d.endDate),
       createdById: session.user.id,
       participants: { connect: { id: session.user.id } }, // creator auto-joins
+      tickets: d.isPaid
+        ? {
+            create: {
+              offeredById: session.user.id,
+              price: Math.round(Number(d.priceUsd) * 100), // dollars → cents
+              quantity: Number(d.quantity) || 0,
+              type: 'General',
+            },
+          }
+        : undefined,
     },
     select: { id: true },
   })
@@ -202,6 +224,23 @@ export async function editEvent(
       endDate: new Date(d.endDate),
     },
   })
+
+  // Sync the event's single ticket with the paid/price state.
+  if (d.isPaid) {
+    const price = Math.round(Number(d.priceUsd) * 100)
+    const quantity = Number(d.quantity) || 0
+    const existing = await db.ticket.findFirst({ where: { eventId: d.id }, select: { id: true } })
+    if (existing) {
+      await db.ticket.update({ where: { id: existing.id }, data: { price, quantity } })
+    } else {
+      await db.ticket.create({
+        data: { eventId: d.id, offeredById: session.user.id, price, quantity, type: 'General' },
+      })
+    }
+  } else {
+    await db.ticket.deleteMany({ where: { eventId: d.id } })
+  }
+
   revalidatePath('/events')
   revalidatePath(`/events/${d.id}`)
   return { id: d.id }
@@ -224,9 +263,11 @@ export async function joinEvent(eventId: string): Promise<{ joined: boolean } | 
 
   const event = await db.event.findFirst({
     where: { id: eventId, deletedAt: null },
-    select: { id: true },
+    select: { id: true, isPaid: true },
   })
   if (!event) return { error: 'Event not found' }
+  // Paid events are joined by buying a ticket (handled by the Stripe webhook).
+  if (event.isPaid) return { error: 'This event requires a ticket' }
 
   await db.event.update({
     where: { id: eventId },
