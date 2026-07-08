@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { CalendarDays, MapPin, Users } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { JoinEventButton } from './join-event-button'
 import type { EventListItem } from '../actions'
@@ -56,6 +57,15 @@ export function EventCard({ event }: { event: EventListItem }) {
           <span className="text-muted-foreground text-sm">by {event.creator.name}</span>
           {event.isOwner ? (
             <span className="text-muted-foreground text-xs">Your event</span>
+          ) : event.isPaid ? (
+            // Paid events must be joined by buying a ticket on the detail page.
+            event.isJoined ? (
+              <span className="text-muted-foreground text-xs">🎟 Going</span>
+            ) : (
+              <Button asChild size="sm" variant="outline">
+                <Link href={`/events/${event.id}`}>Get ticket</Link>
+              </Button>
+            )
           ) : (
             <JoinEventButton eventId={event.id} initialJoined={event.isJoined} />
           )}

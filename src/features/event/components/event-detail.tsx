@@ -5,7 +5,30 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { JoinEventButton } from './join-event-button'
 import { EventOwnerActions } from './event-owner-actions'
+import { BuyTicketButton } from '@/features/booking/components/buy-ticket-button'
 import type { EventDetailData } from '../actions'
+
+function EventAction({ event }: { event: EventDetailData }) {
+  if (event.isOwner) return <EventOwnerActions eventId={event.id} />
+
+  // Paid event with a ticket → buy flow.
+  if (event.isPaid && event.ticket) {
+    if (event.hasBooked) {
+      return <Badge className="h-9 px-4 text-sm">🎟 You&apos;re going</Badge>
+    }
+    if (event.ticket.quantity <= 0) {
+      return (
+        <Badge variant="secondary" className="h-9 px-4 text-sm">
+          Sold out
+        </Badge>
+      )
+    }
+    return <BuyTicketButton eventId={event.id} priceCents={event.ticket.price} />
+  }
+
+  // Free event → plain join/leave.
+  return <JoinEventButton eventId={event.id} initialJoined={event.isJoined} size="default" />
+}
 
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString('en-US', {
@@ -37,7 +60,11 @@ export function EventDetail({ event }: { event: EventDetailData }) {
           </div>
           <div className="flex flex-wrap gap-1.5">
             <Badge variant={event.isPaid ? 'default' : 'secondary'}>
-              {event.isPaid ? 'Paid' : 'Free'}
+              {event.isPaid && event.ticket
+                ? `$${(event.ticket.price / 100).toFixed(2)}`
+                : event.isPaid
+                  ? 'Paid'
+                  : 'Free'}
             </Badge>
             {event.eventType.map((type) => (
               <Badge key={type} variant="outline">
@@ -47,11 +74,7 @@ export function EventDetail({ event }: { event: EventDetailData }) {
           </div>
         </div>
 
-        {event.isOwner ? (
-          <EventOwnerActions eventId={event.id} />
-        ) : (
-          <JoinEventButton eventId={event.id} initialJoined={event.isJoined} size="default" />
-        )}
+        <EventAction event={event} />
       </div>
 
       <p className="max-w-prose whitespace-pre-wrap">{event.description}</p>
