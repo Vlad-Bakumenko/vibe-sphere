@@ -22,7 +22,7 @@ export async function getProfile(username: string) {
       posts: {
         where: { deletedAt: null },
         orderBy: { createdAt: 'desc' },
-        select: { id: true, content: true, createdAt: true },
+        select: { id: true, content: true, images: true, createdAt: true },
       },
       createdEvents: {
         where: { deletedAt: null },

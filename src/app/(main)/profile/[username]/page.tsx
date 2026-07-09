@@ -1,6 +1,8 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { notFound } from 'next/navigation'
 
+import { cn } from '@/lib/utils'
 import { auth } from '@/lib/auth'
 import { getProfile } from '@/features/profile/actions'
 import { ProfileHeader } from '@/features/profile/components/profile-header'
@@ -53,6 +55,29 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
               <Card key={post.id}>
                 <CardContent className="py-4">
                   <p className="text-sm">{post.content}</p>
+                  {post.images.length > 0 && (
+                    <div
+                      className={cn(
+                        'mt-3 grid gap-2',
+                        post.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2',
+                      )}
+                    >
+                      {post.images.map((url) => (
+                        <div
+                          key={url}
+                          className="relative aspect-video overflow-hidden rounded-md border"
+                        >
+                          <Image
+                            src={url}
+                            alt="Post image"
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 640px) 100vw, 320px"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <p className="text-muted-foreground mt-2 text-xs">
                     {new Date(post.createdAt).toLocaleDateString()}
                   </p>

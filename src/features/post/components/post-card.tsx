@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Heart, MessageCircle, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -147,7 +148,29 @@ export function PostCard({
           </div>
         </div>
       ) : (
-        <p className="mt-3 text-sm whitespace-pre-wrap">{post.content}</p>
+        <>
+          <p className="mt-3 text-sm whitespace-pre-wrap">{post.content}</p>
+          {post.images.length > 0 && (
+            <div
+              className={cn(
+                'mt-3 grid gap-2',
+                post.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2',
+              )}
+            >
+              {post.images.map((url) => (
+                <div key={url} className="relative aspect-video overflow-hidden rounded-md border">
+                  <Image
+                    src={url}
+                    alt="Post image"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 100vw, 320px"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
