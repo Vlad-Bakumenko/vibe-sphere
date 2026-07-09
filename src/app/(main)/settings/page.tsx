@@ -18,6 +18,7 @@ export default async function SettingsPage() {
           location: profile.location,
           interests: profile.interests,
         }}
+        currentImage={profile.image}
       />
     </div>
   )

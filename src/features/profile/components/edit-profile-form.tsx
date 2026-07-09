@@ -1,22 +1,33 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { UploadButton } from '@/lib/uploadthing'
 import { updateProfile } from '../actions'
 import { updateProfileSchema, type UpdateProfileInput } from '../schema'
 import { InterestsSelector } from './interests-selector'
 
-export function EditProfileForm({ defaultValues }: { defaultValues: UpdateProfileInput }) {
+export function EditProfileForm({
+  defaultValues,
+  currentImage,
+}: {
+  defaultValues: UpdateProfileInput
+  currentImage: string | null
+}) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  // Avatar uploads persist server-side immediately (see the `avatar` file
+  // router); this only mirrors the new URL for an instant preview.
+  const [image, setImage] = useState(currentImage)
 
   const {
     register,
@@ -41,8 +52,36 @@ export function EditProfileForm({ defaultValues }: { defaultValues: UpdateProfil
     })
   }
 
+  const initial = (defaultValues.fullName || defaultValues.username || '?')[0]
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="grid gap-5" noValidate>
+      <div className="flex items-center gap-4">
+        <Avatar className="size-16">
+          {image && <AvatarImage src={image} alt="Your avatar" />}
+          <AvatarFallback className="text-lg">{initial}</AvatarFallback>
+        </Avatar>
+        <div className="grid gap-1">
+          <Label>Profile picture</Label>
+          <UploadButton
+            endpoint="avatar"
+            appearance={{
+              button: 'ut-ready:bg-secondary ut-ready:text-secondary-foreground text-sm',
+            }}
+            content={{ button: 'Change photo' }}
+            onClientUploadComplete={(res) => {
+              const url = res[0]?.ufsUrl
+              if (url) setImage(url)
+              toast.success('Photo updated')
+              router.refresh()
+            }}
+            onUploadError={(err) => {
+              toast.error(err.message)
+            }}
+          />
+        </div>
+      </div>
+
       <div className="grid gap-2">
         <Label htmlFor="fullName">Full name</Label>
         <Input id="fullName" {...register('fullName')} />

@@ -2,8 +2,9 @@
 CLAUDE.md
 .claude/
 
-# Legacy Express API (local reference only)
-api/
+# Legacy Express API (local reference only) — anchored to repo root so it does
+# not also ignore Next.js route handlers under src/app/api/.
+/api/
 
 # Dependencies
 node_modules/

@@ -44,6 +44,25 @@ describe('createPost', () => {
     })
     expect(result).toBeUndefined()
   })
+
+  it('persists uploaded image urls', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'me' } })
+    mockCreate.mockResolvedValue({ id: 'post_1' })
+    const images = ['https://utfs.io/f/a.png', 'https://utfs.io/f/b.png']
+    const result = await createPost({ content: 'with photos', images })
+    expect(mockCreate).toHaveBeenCalledWith({
+      data: { content: 'with photos', images, createdById: 'me' },
+    })
+    expect(result).toBeUndefined()
+  })
+
+  it('rejects more than four images', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'me' } })
+    const images = Array.from({ length: 5 }, (_, i) => `https://utfs.io/f/${i}.png`)
+    const result = await createPost({ content: 'too many', images })
+    expect(result).toEqual({ error: expect.any(String) })
+    expect(mockCreate).not.toHaveBeenCalled()
+  })
 })
 
 describe('likePost', () => {
