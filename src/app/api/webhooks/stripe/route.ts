@@ -3,6 +3,8 @@ import type Stripe from 'stripe'
 
 import { db } from '@/lib/db'
 import { getStripe } from '@/lib/stripe'
+import { sendEmail } from '@/lib/email'
+import { BookingConfirmationEmail } from '@/emails/booking-confirmation-email'
 
 // Prisma + signature verification need the Node runtime (not Edge).
 export const runtime = 'nodejs'
@@ -42,6 +44,33 @@ async function fulfilBooking(params: {
       data: { participants: { connect: { id: params.userId } } },
     })
   })
+
+  // Best-effort confirmation email (never throws; skipped without an API key).
+  const [user, event] = await Promise.all([
+    db.user.findUnique({
+      where: { id: params.userId },
+      select: { name: true, email: true },
+    }),
+    db.event.findUnique({
+      where: { id: params.eventId },
+      select: { title: true, startDate: true, location: true },
+    }),
+  ])
+  if (user?.email && event) {
+    await sendEmail({
+      to: user.email,
+      subject: `Your ticket for ${event.title} is confirmed`,
+      react: BookingConfirmationEmail({
+        name: user.name ?? 'there',
+        eventTitle: event.title,
+        eventDate: event.startDate.toLocaleString('en-US', {
+          dateStyle: 'full',
+          timeStyle: 'short',
+        }),
+        eventLocation: event.location,
+      }),
+    })
+  }
 }
 
 export async function POST(req: NextRequest) {

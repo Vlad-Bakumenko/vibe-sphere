@@ -12,6 +12,7 @@ vi.mock('@/lib/db', () => ({
   db: { user: { findFirst: mockFindFirst, create: mockCreate } },
 }))
 vi.mock('@/lib/auth', () => ({ signIn: mockSignIn }))
+vi.mock('@/lib/email', () => ({ sendEmail: vi.fn() }))
 vi.mock('next-auth', () => ({ AuthError: class AuthError extends Error {} }))
 
 import { register } from './actions'

@@ -5,6 +5,8 @@ import bcrypt from 'bcryptjs'
 
 import { db } from '@/lib/db'
 import { signIn } from '@/lib/auth'
+import { sendEmail } from '@/lib/email'
+import { WelcomeEmail } from '@/emails/welcome-email'
 import { loginSchema, signupSchema, type LoginInput, type SignupInput } from './schema'
 
 export type ActionResult = { error: string } | undefined
@@ -44,6 +46,14 @@ export async function register(input: SignupInput): Promise<ActionResult> {
   const hashedPassword = await bcrypt.hash(password, 10)
   await db.user.create({
     data: { name: fullName, username, email, password: hashedPassword },
+  })
+
+  // Best-effort welcome email — sent before signIn (which throws NEXT_REDIRECT
+  // on success) and never throws itself, so it can't disrupt signup.
+  await sendEmail({
+    to: email,
+    subject: 'Welcome to VibeSphere',
+    react: WelcomeEmail({ name: fullName }),
   })
 
   // Establish the session and redirect (throws NEXT_REDIRECT on success).
