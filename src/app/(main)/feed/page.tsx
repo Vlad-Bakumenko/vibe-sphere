@@ -12,8 +12,11 @@ export default async function FeedPage() {
   const initialData = await getPosts()
 
   return (
-    <div className="grid gap-4">
-      <h1 className="text-2xl font-semibold">Feed</h1>
+    <div className="grid gap-5">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Your feed</h1>
+        <p className="text-muted-foreground text-sm">See what your community is sharing.</p>
+      </div>
       <PostFeed initialData={initialData} currentUserId={session.user.id} />
     </div>
   )

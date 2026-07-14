@@ -2,7 +2,9 @@
 
 import { useEffect, useRef } from 'react'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
+import { MessageSquareText } from 'lucide-react'
 
+import { EmptyState } from '@/components/empty-state'
 import { getPosts, type PostsPage } from '../actions'
 import { PostCard } from './post-card'
 import { CreatePostForm } from './create-post-form'
@@ -49,9 +51,11 @@ export function PostFeed({
       <CreatePostForm onCreated={refresh} />
 
       {posts.length === 0 ? (
-        <p className="text-muted-foreground py-8 text-center text-sm">
-          No posts yet. Be the first to share something!
-        </p>
+        <EmptyState
+          icon={MessageSquareText}
+          title="No posts yet"
+          description="Be the first to share something with your community."
+        />
       ) : (
         posts.map((post) => (
           <PostCard key={post.id} post={post} currentUserId={currentUserId} onChanged={refresh} />
