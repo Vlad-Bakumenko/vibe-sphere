@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CalendarDays, MapPin, Users } from 'lucide-react'
+import { CalendarDays, MapPin, Ticket, Users } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -14,7 +14,11 @@ function EventAction({ event }: { event: EventDetailData }) {
   // Paid event with a ticket → buy flow.
   if (event.isPaid && event.ticket) {
     if (event.hasBooked) {
-      return <Badge className="h-9 px-4 text-sm">🎟 You&apos;re going</Badge>
+      return (
+        <Badge className="bg-brand h-9 gap-1 border-0 px-4 text-sm text-white">
+          <Ticket className="size-4" /> You&apos;re going
+        </Badge>
+      )
     }
     if (event.ticket.quantity <= 0) {
       return (
@@ -45,7 +49,7 @@ export function EventDetail({ event }: { event: EventDetailData }) {
     <div className="grid gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="grid gap-2">
-          <h1 className="text-3xl font-bold">{event.title}</h1>
+          <h1 className="font-heading text-3xl font-bold tracking-tight">{event.title}</h1>
           <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-sm">
             <span className="flex items-center gap-1">
               <CalendarDays className="size-4" /> {formatDateTime(event.startDate)} –{' '}

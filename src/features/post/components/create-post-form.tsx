@@ -52,8 +52,16 @@ export function CreatePostForm({ onCreated }: { onCreated: () => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="grid gap-2 rounded-lg border p-4">
-      <Textarea placeholder="What's on your mind?" rows={3} {...register('content')} />
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="bg-card shadow-soft grid gap-3 rounded-2xl border p-4"
+    >
+      <Textarea
+        placeholder="What's on your mind?"
+        rows={3}
+        className="resize-none border-0 bg-transparent p-0 text-base shadow-none focus-visible:ring-0"
+        {...register('content')}
+      />
       {errors.content && <p className="text-destructive text-sm">{errors.content.message}</p>}
 
       {images.length > 0 && (
@@ -74,7 +82,7 @@ export function CreatePostForm({ onCreated }: { onCreated: () => void }) {
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2 border-t pt-3">
         {images.length < MAX_IMAGES ? (
           <UploadButton
             endpoint="postImage"
@@ -95,7 +103,7 @@ export function CreatePostForm({ onCreated }: { onCreated: () => void }) {
         ) : (
           <span className="text-muted-foreground text-sm">Max {MAX_IMAGES} images</span>
         )}
-        <Button type="submit" disabled={isPending}>
+        <Button type="submit" variant="brand" disabled={isPending} className="cursor-pointer">
           {isPending ? 'Posting…' : 'Post'}
         </Button>
       </div>

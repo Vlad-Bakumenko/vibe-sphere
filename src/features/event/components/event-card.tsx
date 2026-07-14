@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CalendarDays, MapPin, Users } from 'lucide-react'
+import { CalendarDays, MapPin, Ticket, Users } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,11 +19,14 @@ function formatDateTime(iso: string) {
 
 export function EventCard({ event }: { event: EventListItem }) {
   return (
-    <Card>
+    <Card className="hover:shadow-soft-lg transition-shadow">
       <CardContent className="grid gap-3 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="grid gap-1">
-            <Link href={`/events/${event.id}`} className="text-lg font-semibold hover:underline">
+            <Link
+              href={`/events/${event.id}`}
+              className="font-heading text-lg font-semibold hover:underline"
+            >
               {event.title}
             </Link>
             <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-sm">
@@ -38,7 +41,7 @@ export function EventCard({ event }: { event: EventListItem }) {
               </span>
             </div>
           </div>
-          <Badge variant={event.isPaid ? 'default' : 'secondary'}>
+          <Badge className={event.isPaid ? 'bg-brand border-0 text-white' : ''} variant="secondary">
             {event.isPaid ? 'Paid' : 'Free'}
           </Badge>
         </div>
@@ -60,7 +63,9 @@ export function EventCard({ event }: { event: EventListItem }) {
           ) : event.isPaid ? (
             // Paid events must be joined by buying a ticket on the detail page.
             event.isJoined ? (
-              <span className="text-muted-foreground text-xs">🎟 Going</span>
+              <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                <Ticket className="size-3.5" /> Going
+              </span>
             ) : (
               <Button asChild size="sm" variant="outline">
                 <Link href={`/events/${event.id}`}>Get ticket</Link>

@@ -86,7 +86,7 @@ export function PostCard({
   }
 
   return (
-    <article className="rounded-lg border p-4">
+    <article className="bg-card shadow-soft hover:shadow-soft-lg rounded-2xl border p-4 transition-shadow">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3">
           <Link href={`/profile/${post.author.username}`}>
@@ -94,8 +94,8 @@ export function PostCard({
               {post.author.image && (
                 <AvatarImage src={post.author.image} alt={post.author.name ?? ''} />
               )}
-              <AvatarFallback>
-                {(post.author.name ?? post.author.username ?? '?')[0]}
+              <AvatarFallback className="bg-brand text-xs text-white">
+                {(post.author.name ?? post.author.username ?? '?')[0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </Link>
@@ -180,7 +180,7 @@ export function PostCard({
           aria-pressed={liked}
           aria-label={liked ? 'Unlike' : 'Like'}
           className={cn(
-            'hover:text-foreground flex items-center gap-1.5 transition-colors',
+            'hover:text-foreground flex cursor-pointer items-center gap-1.5 transition-colors',
             liked && 'text-red-500 hover:text-red-500',
           )}
         >
@@ -192,7 +192,7 @@ export function PostCard({
           onClick={() => setShowComments((v) => !v)}
           aria-expanded={showComments}
           aria-label="Toggle comments"
-          className="hover:text-foreground flex items-center gap-1.5 transition-colors"
+          className="hover:text-foreground flex cursor-pointer items-center gap-1.5 transition-colors"
         >
           <MessageCircle className="size-4" />
           {post.commentCount}

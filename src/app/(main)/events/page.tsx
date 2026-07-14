@@ -1,9 +1,12 @@
 import Link from 'next/link'
 
+import { CalendarSearch } from 'lucide-react'
+
 import { getEvents, getSuggestedEvents, type EventFilters } from '@/features/event/actions'
 import { EventCard } from '@/features/event/components/event-card'
 import { EventFilters as EventFiltersBar } from '@/features/event/components/event-filters'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/empty-state'
 
 export default async function EventsPage({
   searchParams,
@@ -21,9 +24,14 @@ export default async function EventsPage({
 
   return (
     <div className="grid gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Events</h1>
-        <Button asChild size="sm">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Events</h1>
+          <p className="text-muted-foreground text-sm">
+            Discover what&apos;s happening around you.
+          </p>
+        </div>
+        <Button asChild variant="brand" size="sm" className="cursor-pointer">
           <Link href="/events/new">Create event</Link>
         </Button>
       </div>
@@ -41,9 +49,11 @@ export default async function EventsPage({
 
       <div className="grid gap-3">
         {events.length === 0 ? (
-          <p className="text-muted-foreground py-8 text-center text-sm">
-            No events match your filters.
-          </p>
+          <EmptyState
+            icon={CalendarSearch}
+            title="No events found"
+            description="Try adjusting your filters, or create the first one."
+          />
         ) : (
           events.map((event) => <EventCard key={event.id} event={event} />)
         )}

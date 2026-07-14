@@ -2,27 +2,173 @@
 @import 'uploadthing/tw/v4';
 @source '../../node_modules/@uploadthing/react/dist';
 
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * VibeSphere design system — "Modern & vibrant".
+ * Bold violet→fuchsia accent, soft gradients, rounded cards, light + dark.
+ * Colors in oklch for perceptual consistency across both themes.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --radius: 0.75rem;
+
+  --background: oklch(0.99 0.004 300);
+  --foreground: oklch(0.24 0.02 285);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.24 0.02 285);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.24 0.02 285);
+
+  --primary: oklch(0.55 0.24 292);
+  --primary-foreground: oklch(0.99 0.01 300);
+
+  --secondary: oklch(0.96 0.02 300);
+  --secondary-foreground: oklch(0.4 0.13 292);
+
+  --muted: oklch(0.97 0.01 300);
+  --muted-foreground: oklch(0.52 0.03 286);
+
+  --accent: oklch(0.95 0.035 330);
+  --accent-foreground: oklch(0.4 0.15 330);
+
+  --destructive: oklch(0.58 0.22 25);
+  --destructive-foreground: oklch(0.99 0.01 25);
+
+  --border: oklch(0.92 0.012 300);
+  --input: oklch(0.92 0.012 300);
+  --ring: oklch(0.55 0.24 292);
+
+  --chart-1: oklch(0.55 0.24 292);
+  --chart-2: oklch(0.65 0.24 330);
+  --chart-3: oklch(0.6 0.18 250);
+  --chart-4: oklch(0.7 0.19 160);
+  --chart-5: oklch(0.72 0.2 60);
+
+  /* Brand accents used for CTAs, headers, avatar fallbacks. */
+  --gradient-brand: linear-gradient(135deg, oklch(0.58 0.24 292), oklch(0.64 0.26 330));
+  --gradient-brand-soft: linear-gradient(135deg, oklch(0.96 0.03 300), oklch(0.96 0.04 330));
+
+  --shadow-soft: 0 4px 24px -8px oklch(0.55 0.24 292 / 0.18);
+  --shadow-soft-lg: 0 12px 40px -12px oklch(0.55 0.24 292 / 0.24);
+}
+
+.dark {
+  --background: oklch(0.17 0.02 286);
+  --foreground: oklch(0.97 0.005 300);
+
+  --card: oklch(0.21 0.025 286);
+  --card-foreground: oklch(0.97 0.005 300);
+  --popover: oklch(0.21 0.025 286);
+  --popover-foreground: oklch(0.97 0.005 300);
+
+  --primary: oklch(0.65 0.23 293);
+  --primary-foreground: oklch(0.16 0.02 286);
+
+  --secondary: oklch(0.28 0.03 290);
+  --secondary-foreground: oklch(0.95 0.01 300);
+
+  --muted: oklch(0.27 0.02 286);
+  --muted-foreground: oklch(0.71 0.025 286);
+
+  --accent: oklch(0.32 0.06 330);
+  --accent-foreground: oklch(0.95 0.02 330);
+
+  --destructive: oklch(0.62 0.2 25);
+  --destructive-foreground: oklch(0.98 0.01 25);
+
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.65 0.23 293);
+
+  --chart-1: oklch(0.68 0.23 293);
+  --chart-2: oklch(0.72 0.24 330);
+  --chart-3: oklch(0.68 0.18 250);
+  --chart-4: oklch(0.72 0.19 160);
+  --chart-5: oklch(0.76 0.2 60);
+
+  --gradient-brand: linear-gradient(135deg, oklch(0.62 0.24 293), oklch(0.68 0.26 330));
+  --gradient-brand-soft: linear-gradient(135deg, oklch(0.28 0.05 293), oklch(0.3 0.06 330));
+
+  --shadow-soft: 0 4px 24px -8px oklch(0 0 0 / 0.5);
+  --shadow-soft-lg: 0 12px 40px -12px oklch(0 0 0 / 0.6);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  --font-sans:
+    var(--font-jakarta), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  --font-heading: var(--font-outfit), var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: color-mix(in oklch, var(--ring) 50%, transparent);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.015em;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Brand helpers as first-class Tailwind v4 utilities (so variants work). */
+@utility bg-brand {
+  background-image: var(--gradient-brand);
+}
+@utility bg-brand-soft {
+  background-image: var(--gradient-brand-soft);
+}
+@utility text-brand {
+  background-image: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@utility shadow-soft {
+  box-shadow: var(--shadow-soft);
+}
+@utility shadow-soft-lg {
+  box-shadow: var(--shadow-soft-lg);
 }
