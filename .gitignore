@@ -2,8 +2,6 @@
 CLAUDE.md
 .claude/
 
-# Legacy Express API (local reference only) — anchored to repo root so it does
-# not also ignore Next.js route handlers under src/app/api/.
 /api/
 
 # Dependencies
@@ -23,7 +21,8 @@ next-env.d.ts
 
 # Env
 .env
-.env*.local
+.env.*
+!.env.example
 
 # Prisma
 prisma/*.db
@@ -38,6 +37,8 @@ yarn-error.log*
 coverage/
 /test-results/
 /playwright-report/
+/blob-report/
+/playwright/.cache/
 
 # OS / editor
 .DS_Store
@@ -48,3 +49,6 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+# Local-only working notes
+DEPLOYMENT.md

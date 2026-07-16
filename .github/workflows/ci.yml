@@ -67,6 +67,9 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/vibesphere?schema=public
+      # Prisma's schema declares directUrl (for pooled prod connections); migrations
+      # and seeding require it. CI Postgres has no pooler, so it mirrors DATABASE_URL.
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/vibesphere?schema=public
       AUTH_SECRET: ci-only-secret-not-used-in-production
 
     steps:
